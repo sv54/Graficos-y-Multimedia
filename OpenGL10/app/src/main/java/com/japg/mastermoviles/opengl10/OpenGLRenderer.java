@@ -95,6 +95,10 @@ public class OpenGLRenderer implements Renderer {
 	// Rotación alrededor de los ejes
 	private float rX = 0f;
 	private float rY = 0f;
+
+	// Escalado alrdeddor de los ejes
+	private float sX = 1f;
+	private float sY = 1f;
 	
 	private static final int POSITION_COMPONENT_COUNT = 3;
 	private static final int NORMAL_COMPONENT_COUNT = 3;
@@ -222,7 +226,7 @@ public class OpenGLRenderer implements Renderer {
 			Log.w(TAG, "Max. Texture Image Units: "+maxTextureImageUnits[0]);
 		}
 		// Cargamos la textura desde los recursos
-		texture = TextureHelper.loadTexture(context, R.drawable.mono_tex);
+		texture = TextureHelper.loadTexture(context, R.drawable.f1_base_color);
 		
 		// Leemos los shaders
 		if (maxVertexTextureImageUnits[0]>0) {
@@ -317,6 +321,7 @@ public class OpenGLRenderer implements Renderer {
 			rotateM(modelMatrix, 0, rY, 0f, 1f, 0f);
 			rotateM(modelMatrix, 0, rX, 1f, 0f, 0f);
 //		}
+		scaleM(modelMatrix, 0, sX, sY, sX);
 
 				
 		multiplyMM(MVP, 0, projectionMatrix, 0, modelMatrix, 0);
@@ -382,49 +387,50 @@ public class OpenGLRenderer implements Renderer {
 	}
 
 	boolean anteriorAumentando = false;
-	public void handleScale2(boolean aumentando){
-
+	public void handleScale2(boolean aumentando, float scaleFactor){
+		Log.w("tagg", aumentando + "");
+		Log.w("tagg", "scaleFactor: " + scaleFactor);
 		if(anteriorAumentando != aumentando){
 			currentScale = 1.0f;
 			anteriorAumentando = aumentando;
 		}
+		setIdentityM(modelMatrix, 0);
 
 		if(aumentando){
 //			currentScale = currentScale + 0.001f;
-			scaleM(projectionMatrix, 0, 1.05f, 1.05f, 1.0f);
+			sX = sX * scaleFactor;
+			sY = sY * scaleFactor;
+//			scaleM(modelMatrix, 0, 1.05f, 1.05f, 1.0f);
+
 
 		}
 		else{
-			scaleM(projectionMatrix, 0, 0.95f, 0.95f, 1.0f);
-
+			scaleM(modelMatrix, 0, 0.95f, 0.95f, 1.0f);
+			sX = sX * 0.95f;
+			sY = sY * 0.95f;
 //			currentScale = currentScale - 0.001f;
 
 		}
 
-		float[] matrizProyeccion = new float[16];
-		glGetFloatv(GL_PROJECTION_MATRIX, matrizProyeccion, 0);
-		Log.w("tagg", matrizProyeccion[0] + "");
-//		scaleM(projectionMatrix, 0, currentScale, currentScale, 1.0f);
+		float[] MVP = new float[16];
+		multiplyMM(MVP, 0, projectionMatrix, 0, modelMatrix, 0);
+		glUniformMatrix4fv(uMVPMatrixLocation, 1, false, MVP, 0);
+
+		// Env?a la matriz de proyecci?n multiplicada por modelMatrix al shader
+		glUniformMatrix4fv(uMVPMatrixLocation, 1, false, MVP, 0);
+		// Env?a la matriz modelMatrix al shader
+		glUniformMatrix4fv(uMVMatrixLocation, 1, false, modelMatrix, 0);
+		// Actualizamos el color (Marr?n)
+		//glUniform4f(uColorLocation, 0.78f, 0.49f, 0.12f, 1.0f);
+		glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glUniform1f(uTextureUnitLocation, 0);
+
 
 	}
 
-	public void limitarEscaladoMaximo(float factorMaximo) {
-		// Obtiene la matriz de proyección actual
-		float[] matrizProyeccion = new float[16];
-		glGetFloatv(GL_PROJECTION_MATRIX, matrizProyeccion, 0);
-		Log.w("tagg", matrizProyeccion[15] + "");
-
-		// Aplica el límite máximo de escalado a la matriz de proyección
-		// Por ejemplo, puedes escalar los elementos de la matriz
-		for (int i = 0; i < 16; i++) {
-			matrizProyeccion[i] = Math.min(matrizProyeccion[i], factorMaximo);
-		}
-
-		// Establece la matriz de proyección modificada en el OpenGL Renderer
-		glMatrixMode(GL_PROJECTION);
-		glLoadMatrixf(matrizProyeccion, 0);
-		glMatrixMode(GL_MODELVIEW);
-	}
 
 	public void handleTouchPress(float normalizedX, float normalizedY) {
 		if (LoggerConfig.ON) {

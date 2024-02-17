@@ -77,11 +77,13 @@ public class OpenGLActivity extends AppCompatActivity {
 
         glSurfaceView.setOnTouchListener(new OnTouchListener() {
             float lastDistance = -1;
-
+            float distance= 0f;
+            float firstDistance = 0f;
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event != null) {
                     boolean aumentamosEscala = false;
+
                     // Convert touch coordinates into normalized device
                     // coordinates, keeping in mind that Android's Y
                     // coordinates are inverted.
@@ -94,7 +96,11 @@ public class OpenGLActivity extends AppCompatActivity {
                                 openGLRenderer.handleTouchPress(normalizedX, normalizedY);
                             }
                         });
-                    } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    } else if (event.getAction() == MotionEvent.ACTION_UP){
+                        Log.w("tagg", "Se levantaron los dedos");
+                        firstDistance = distance;
+                    }
+                    else if (event.getAction() == MotionEvent.ACTION_MOVE) {
                         if (event.getPointerCount() == 1) {
                             glSurfaceView.queueEvent(new Runnable() {
                                 @Override
@@ -105,6 +111,8 @@ public class OpenGLActivity extends AppCompatActivity {
                         }
                         if (event.getPointerCount() == 2) {
 
+
+
                             float x1 = event.getX(0);
                             float y1 = event.getY(0);
                             float x2 = event.getX(1);
@@ -112,8 +120,15 @@ public class OpenGLActivity extends AppCompatActivity {
 
                             float dx = x2 - x1;
                             float dy = y2 - y1;
-                            float distance = (float) Math.sqrt(dx * dx + dy * dy);
+                            distance = (float) Math.sqrt(dx * dx + dy * dy);
 
+                            if (firstDistance == 0f){
+                                firstDistance = distance;
+                            }
+
+                            Log.w("tagg", "distance " + distance);
+                            Log.w("tagg", "firstdistance " + firstDistance);
+                            float scaleFactor = distance/firstDistance;
                             if (distance < lastDistance){
                                 aumentamosEscala = false;
                             }
@@ -122,12 +137,12 @@ public class OpenGLActivity extends AppCompatActivity {
                             }
 
 
-                            float scaleFactor = (distance / lastDistance);
+                            //float scaleFactor = (distance / lastDistance);
                             //Log.w("tagg", "" + scaleFactor);
 //                            openGLRenderer.handleScale(scaleFactor);
                             //Log.w("tagg", "" + aumentamosEscala);
 
-                            openGLRenderer.handleScale2(aumentamosEscala);
+                            openGLRenderer.handleScale2(aumentamosEscala, scaleFactor);
                             lastDistance = distance;
 
 
