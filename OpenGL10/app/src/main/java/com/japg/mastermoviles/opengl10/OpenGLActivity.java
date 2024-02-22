@@ -97,7 +97,7 @@ public class OpenGLActivity extends AppCompatActivity {
                             }
                         });
                     } else if (event.getAction() == MotionEvent.ACTION_UP){
-                        Log.w("tagg", "Se levantaron los dedos");
+                        Log.w("tagg", "Se levantaron los dedos");   
                         firstDistance = distance;
                     }
                     else if (event.getAction() == MotionEvent.ACTION_MOVE) {
