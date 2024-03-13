@@ -15,24 +15,24 @@ void main()
 {
 	float ambient  = 0.15;									// 15% de intensidad ambiente
 	vec4  specularColor = vec4(1.0, 1.0, 1.0, 1.0);			// Color especular (brillos blancos)
-	
+
 	vec3 LightPos0 = vec3( 2,  2, 3);						// Posición de la luz 0 [fija]
 	vec3 LightPos1 = vec3(0, -5, 3);						// Posición de la luz 1 [fija]
-	
+
 	vec3 P = vec3(u_MVMatrix * a_Position);					// Posición del vértice
 	vec3 N = vec3(u_MVMatrix * vec4(a_Normal, 0.0));    	// Normal del vértice
-	
+
 	// Primera Luz
 	float d = length(P - LightPos0);						// distancia
 	vec3  L = normalize(P - LightPos0);						// Vector Luz
 	vec3  V = normalize(P);	  								// Vector Visión (Eye)
 	vec3  R = normalize(reflect(-L, N));					// Vector reflejado R=2N(N.L)-L
-	
+
 	float attenuation = 1.0/(0.3+(0.1*d)+(0.01*d*d)); 		// Cálculo de la atenuación
-	
+
 	float diffuse  = max(dot(N, L), 0.0);					// Cálculo de la intensidad difusa
 	float specular = pow(max(dot(V, R), 0.0), 200.0);		// Exponente de Phong (200)
-		
+
 	v_Color = u_Color*(ambient+attenuation*diffuse);
 	v_Specular_Color = specularColor*specular*attenuation;
 	// Segunda Luz
@@ -40,12 +40,12 @@ void main()
 	L = normalize(P - LightPos1);							// Vector Luz
 	V = normalize(P);	  									// Vector Visión (Eye)
 	R = normalize(reflect(-L, N));							// Vector reflejado R=2N(N.L)-L
-	
+
 	attenuation = 1.0/(0.3+(0.1*d)+(0.01*d*d)); 			// Cálculo de la atenuación
-	
+
 	diffuse  = max(dot(N, L), 0.0);							// Cálculo de la intensidad difusa
 	specular = pow(max(dot(V, R), 0.0), 200.0);				// Exponente de Phong (200)
-	
+
 	v_Color += attenuation*(u_Color*diffuse + specularColor*specular); 
 	v_Specular_Color += specularColor*specular*attenuation;
 	v_UV = a_UV;

@@ -28,8 +28,7 @@ void main()
 	vec3  V = normalize(P);	  								// Vector Visión (Eye)
 	vec3  R = normalize(reflect(-L, N));					// Vector reflejado R=2N(N.L)-L
 
-	//float attenuation = 1.0/(0.3+(0.1*d)+(0.01*d*d)); 		// Cálculo de la atenuación
-	float attenuation = 1.0;
+	float attenuation = 1.0/(0.3+(0.1*d)+(0.01*d*d)); 		// Cálculo de la atenuación
 
 	float diffuse  = max(dot(N, L), 0.0);					// Cálculo de la intensidad difusa
 	float specular = pow(max(dot(V, R), 0.0), 200.0);		// Exponente de Phong (200)
@@ -42,9 +41,7 @@ void main()
 	V = normalize(P);	  									// Vector Visión (Eye)
 	R = normalize(reflect(-L, N));							// Vector reflejado R=2N(N.L)-L
 
-	//attenuation = 1.0/(0.3+(0.1*d)+(0.01*d*d)); 			// Cálculo de la atenuación
-	attenuation = 1.0;
-
+	attenuation = 1.0/(0.3+(0.1*d)+(0.01*d*d)); 			// Cálculo de la atenuación
 
 	diffuse  = max(dot(N, L), 0.0);							// Cálculo de la intensidad difusa
 	specular = pow(max(dot(V, R), 0.0), 200.0);				// Exponente de Phong (200)

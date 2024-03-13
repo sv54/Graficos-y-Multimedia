@@ -8,12 +8,16 @@ import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -22,6 +26,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class OpenGLActivity extends AppCompatActivity {
     private GLSurfaceView glSurfaceView;
+    private Button buttonLeft;
+    private Button buttonRight;
     private boolean rendererSet = false;
 
     @SuppressLint("ClickableViewAccessibility")
@@ -59,6 +65,8 @@ public class OpenGLActivity extends AppCompatActivity {
                         || Build.MODEL.contains("google_sdk")
                         || Build.MODEL.contains("Emulator")
                         || Build.MODEL.contains("Android SDK built for x86")));
+
+
         if (supportsEs2) {
             // Request an OpenGL ES 2.0 compatible context.
             glSurfaceView.setEGLContextClientVersion(2);
@@ -76,9 +84,7 @@ public class OpenGLActivity extends AppCompatActivity {
         }
 
         glSurfaceView.setOnTouchListener(new OnTouchListener() {
-            float lastDistance = -1;
-            float distance= 0f;
-            float firstDistance = 0f;
+            float lastDistance = 0f;
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event != null) {
@@ -98,7 +104,7 @@ public class OpenGLActivity extends AppCompatActivity {
                         });
                     } else if (event.getAction() == MotionEvent.ACTION_UP){
                         Log.w("tagg", "Se levantaron los dedos");   
-                        firstDistance = distance;
+
                     }
                     else if (event.getAction() == MotionEvent.ACTION_MOVE) {
                         if (event.getPointerCount() == 1) {
@@ -110,46 +116,38 @@ public class OpenGLActivity extends AppCompatActivity {
                             });
                         }
                         if (event.getPointerCount() == 2) {
-
-
-
                             float x1 = event.getX(0);
                             float y1 = event.getY(0);
                             float x2 = event.getX(1);
                             float y2 = event.getY(1);
-
                             float dx = x2 - x1;
                             float dy = y2 - y1;
-                            distance = (float) Math.sqrt(dx * dx + dy * dy);
-
-                            if (firstDistance == 0f){
-                                firstDistance = distance;
+                            float distance = (float) Math.sqrt(dx * dx + dy * dy);
+                            if(lastDistance == 0f){
+                                lastDistance = distance;
                             }
+                            float distanceChange = distance - lastDistance;
 
-                            Log.w("tagg", "distance " + distance);
-                            Log.w("tagg", "firstdistance " + firstDistance);
-                            float scaleFactor = distance/firstDistance;
-                            if (distance < lastDistance){
-                                aumentamosEscala = false;
-                            }
-                            else if (lastDistance < distance){
-                                aumentamosEscala = true;
-                            }
-
-
-                            //float scaleFactor = (distance / lastDistance);
-                            //Log.w("tagg", "" + scaleFactor);
-//                            openGLRenderer.handleScale(scaleFactor);
-                            //Log.w("tagg", "" + aumentamosEscala);
-
-                            openGLRenderer.handleScale2(aumentamosEscala, scaleFactor);
+                            System.out.println("distanceChange: " + distance + "; " + lastDistance);
                             lastDistance = distance;
-
+                            openGLRenderer.handleScale2(distanceChange);
                         }
 
-
-                    } else {
-                        lastDistance = -1; // Reinicia la distancia si no hay dos dedos tocando la pantalla
+                    }
+                    else if(event.getAction() == MotionEvent.ACTION_POINTER_DOWN)
+                    {
+                        if (event.getPointerCount() == 2) {
+                            float x1 = event.getX(0);
+                            float y1 = event.getY(0);
+                            float x2 = event.getX(1);
+                            float y2 = event.getY(1);
+                            float dx = x2 - x1;
+                            float dy = y2 - y1;
+                            float distance = (float) Math.sqrt(dx * dx + dy * dy);
+                            lastDistance = distance;
+                        }
+                    }
+                    else {
                         return false;
                     }
                     return true;
@@ -159,7 +157,48 @@ public class OpenGLActivity extends AppCompatActivity {
             }
 
         });
-        setContentView(glSurfaceView);
+        buttonLeft = new Button(this);
+        buttonLeft.setText("Left");
+        buttonRight = new Button(this);
+        buttonRight.setText("Right");
+
+        // Configurar la posición y el tamaño de los botones
+        FrameLayout.LayoutParams leftParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+        );
+        leftParams.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.START;
+        leftParams.setMargins(16, 0, 0, 16); // Margen izquierdo y inferior
+
+        FrameLayout.LayoutParams rightParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+        );
+        rightParams.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.END;
+        rightParams.setMargins(0, 0, 16, 16); // Margen derecho y inferior
+
+        // Agregar los botones al FrameLayout
+        FrameLayout layout = new FrameLayout(this);
+        layout.addView(buttonLeft, leftParams);
+        layout.addView(buttonRight, rightParams);
+        layout.addView(glSurfaceView);
+        // Establecer el FrameLayout como el contenido de la actividad
+        setContentView(layout);
+
+        // Agregar listeners a los botones si es necesario
+        buttonLeft.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openGLRenderer.handleLeft();
+            }
+        });
+
+        buttonRight.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openGLRenderer.handleRight();
+            }
+        });
     }
 
     @Override
