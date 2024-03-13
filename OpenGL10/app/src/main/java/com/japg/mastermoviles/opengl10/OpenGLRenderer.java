@@ -2,6 +2,7 @@ package com.japg.mastermoviles.opengl10;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView.Renderer;
+import android.opengl.Matrix;
 import android.util.Log;
 
 import com.japg.mastermoviles.opengl10.util.LoggerConfig;
@@ -11,18 +12,21 @@ import com.japg.mastermoviles.opengl10.util.TextResourceReader;
 import com.japg.mastermoviles.opengl10.util.TextureHelper;
 
 import java.nio.Buffer;
+import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import static android.opengl.GLES10.GL_MODELVIEW;
-import static android.opengl.GLES10.GL_PROJECTION;
+import static android.opengl.GLES10.GL_AMBIENT;
+import static android.opengl.GLES10.GL_DIFFUSE;
+import static android.opengl.GLES10.GL_FRONT;
+import static android.opengl.GLES10.GL_LIGHT0;
+import static android.opengl.GLES10.GL_LIGHTING;
+import static android.opengl.GLES10.GL_POSITION;
+import static android.opengl.GLES10.glLightfv;
 import static android.opengl.GLES10.glLoadMatrixf;
-import static android.opengl.GLES10.glMatrixMode;
-import static android.opengl.GLES11.GL_MODELVIEW_MATRIX;
-import static android.opengl.GLES11.GL_PROJECTION_MATRIX;
+import static android.opengl.GLES10.glMaterialfv;
 import static android.opengl.GLES20.GL_COLOR_BUFFER_BIT;
-import static android.opengl.GLES20.GL_CULL_FACE;
 import static android.opengl.GLES20.GL_DEPTH_BUFFER_BIT;
 import static android.opengl.GLES20.GL_DEPTH_TEST;
 import static android.opengl.GLES20.GL_FLOAT;
@@ -89,9 +93,11 @@ public class OpenGLRenderer implements Renderer {
 	private int aPositionLocation;
 	private int aNormalLocation;
 	private int aUVLocation;
-	
+
 	private int	texture;
-	
+	private int	textureRuedas;
+	private int	textureRuedasTraseras;
+
 	// Rotación alrededor de los ejes
 	private float rX = 0f;
 	private float rY = 0f;
@@ -113,7 +119,8 @@ public class OpenGLRenderer implements Renderer {
 	private final float[] MVP = new float[16];
 
 	Resource3DSReader obj3DS;
-	
+	Resource3DSReader obj3DS_ruedaIzq;
+	Resource3DSReader obj3DS_ruedasTraseras;
 	float[] tablaVertices = {
 		// Abanico de triángulos, x, y, R, G, B
 		 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
@@ -203,6 +210,14 @@ public class OpenGLRenderer implements Renderer {
 		// Lee un archivo 3DS desde un recurso
 		obj3DS = new Resource3DSReader();
 		obj3DS.read3DSFromResource(context, R.raw.f1);
+
+		obj3DS_ruedaIzq = new Resource3DSReader();
+		obj3DS_ruedaIzq.read3DSFromResource(context, R.raw.f1_rueda_izq);
+
+		obj3DS_ruedasTraseras = new Resource3DSReader();
+		obj3DS_ruedasTraseras.read3DSFromResource(context, R.raw.f1_ruedas_traseras);
+
+
 	}
 	
 	@Override
@@ -227,7 +242,9 @@ public class OpenGLRenderer implements Renderer {
 		}
 		// Cargamos la textura desde los recursos
 		texture = TextureHelper.loadTexture(context, R.drawable.f1_base_color);
-		
+		textureRuedas = TextureHelper.loadTexture(context, R.drawable.ruedas_traseras);
+		textureRuedasTraseras = TextureHelper.loadTexture(context, R.drawable.ruedas_traseras);
+
 		// Leemos los shaders
 		if (maxVertexTextureImageUnits[0]>0) {
 			// Textura soportada en el vertex shader
@@ -299,11 +316,13 @@ public class OpenGLRenderer implements Renderer {
 		// Clear the rendering surface.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
+//		glEnable(GL_LIGHTING);
 		//glEnable(GL_CULL_FACE);
 		//glEnable(GL_BLEND);
 		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		//glEnable(GL_DITHER);
 		glLineWidth(2.0f);
+
 		
 		
 		
@@ -312,21 +331,15 @@ public class OpenGLRenderer implements Renderer {
 		translateM(modelMatrix, 0, 0f, 0.0f, -7.0f);
 		// Rotación alrededor del eje x e y
 
-//		Log.w("Rotate", "rY:" + rY + "; rX:" + rX);
-//		if (rX > 90 && rX < 180 || rX > 270 && rX < 360){
-//			rotateM(modelMatrix, 0, rY, 0f, 0f, 1f);
-//			rotateM(modelMatrix, 0, rX, 1f, 0f, 0f);
-//		}
-//		else{
-			rotateM(modelMatrix, 0, rY, 0f, 1f, 0f);
-			rotateM(modelMatrix, 0, rX, 1f, 0f, 0f);
-//		}
+		rotateM(modelMatrix, 0, rY, 0f, 1f, 0f);
+		rotateM(modelMatrix, 0, rX, 1f, 0f, 0f);
+
 		scaleM(modelMatrix, 0, sX, sY, sX);
 
 				
 		multiplyMM(MVP, 0, projectionMatrix, 0, modelMatrix, 0);
 		//System.arraycopy(temp, 0, projectionMatrix, 0, temp.length);
-	
+
 		
 		// Env?a la matriz de proyecci?n multiplicada por modelMatrix al shader
 		glUniformMatrix4fv(uMVPMatrixLocation, 1, false, MVP, 0);
@@ -359,32 +372,54 @@ public class OpenGLRenderer implements Renderer {
 					false, STRIDE, obj3DS.dataBuffer[i]);
 			glDrawArrays(GL_TRIANGLES, 0, obj3DS.numVertices[i]);
 		}
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureRuedas);
+		glUniform1f(uTextureUnitLocation, 0);
+		for (int i = 0; i < obj3DS_ruedaIzq.numMeshes; i++) {
+
+			final Buffer position = obj3DS_ruedaIzq.dataBuffer[i].position(0);
+			glVertexAttribPointer(aPositionLocation, POSITION_COMPONENT_COUNT, GL_FLOAT,
+					false, STRIDE, obj3DS_ruedaIzq.dataBuffer[i]);
+
+			// Asociamos el vector de normales
+			obj3DS_ruedaIzq.dataBuffer[i].position(POSITION_COMPONENT_COUNT);
+			glVertexAttribPointer(aNormalLocation, NORMAL_COMPONENT_COUNT, GL_FLOAT,
+					false, STRIDE, obj3DS_ruedaIzq.dataBuffer[i]);
+
+			// Asociamos el vector de UVs
+			obj3DS_ruedaIzq.dataBuffer[i].position(POSITION_COMPONENT_COUNT+NORMAL_COMPONENT_COUNT);
+			glVertexAttribPointer(aUVLocation, NORMAL_COMPONENT_COUNT, GL_FLOAT,
+					false, STRIDE, obj3DS_ruedaIzq.dataBuffer[i]);
+			glDrawArrays(GL_TRIANGLES, 0, obj3DS_ruedaIzq.numVertices[i]);
+		}
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureRuedasTraseras);
+		glUniform1f(uTextureUnitLocation, 0);
+		for (int i = 0; i < obj3DS_ruedasTraseras.numMeshes; i++) {
+
+			final Buffer position = obj3DS_ruedasTraseras.dataBuffer[i].position(0);
+			glVertexAttribPointer(aPositionLocation, POSITION_COMPONENT_COUNT, GL_FLOAT,
+					false, STRIDE, obj3DS_ruedasTraseras.dataBuffer[i]);
+
+			// Asociamos el vector de normales
+			obj3DS_ruedasTraseras.dataBuffer[i].position(POSITION_COMPONENT_COUNT);
+			glVertexAttribPointer(aNormalLocation, NORMAL_COMPONENT_COUNT, GL_FLOAT,
+					false, STRIDE, obj3DS_ruedasTraseras.dataBuffer[i]);
+
+			// Asociamos el vector de UVs
+			obj3DS_ruedasTraseras.dataBuffer[i].position(POSITION_COMPONENT_COUNT+NORMAL_COMPONENT_COUNT);
+			glVertexAttribPointer(aUVLocation, NORMAL_COMPONENT_COUNT, GL_FLOAT,
+					false, STRIDE, obj3DS_ruedasTraseras.dataBuffer[i]);
+			glDrawArrays(GL_TRIANGLES, 0, obj3DS_ruedasTraseras.numVertices[i]);
+		}
 	}
 
 	private float lastNormalizedX;
 	private float lastNormalizedY;
 
 	private float currentScale = 1.0f;
-
-
-	public void handleScale(float newScale) {
-		if (LoggerConfig.ON) {
-//			Log.w(TAG, "scale factor [" +newScale+"]");
-		}
-		if(newScale > 1){
-			currentScale = currentScale + 0.0001f * newScale;
-		}
-		else{
-			currentScale = currentScale - 0.0001f * newScale;
-
-		}
-		if (LoggerConfig.ON) {
-			Log.w(TAG, "current scale [" +currentScale+"]");
-		}
-//		if(currentScale > 5)
-		scaleM(projectionMatrix, 0, currentScale, currentScale, 1.0f);
-
-	}
 
 	boolean anteriorAumentando = false;
 	public void handleScale2(boolean aumentando, float scaleFactor){
@@ -398,8 +433,8 @@ public class OpenGLRenderer implements Renderer {
 
 		if(aumentando){
 //			currentScale = currentScale + 0.001f;
-			sX = sX * scaleFactor;
-			sY = sY * scaleFactor;
+			sX = sX * 1.05f;
+			sY = sY * 1.05f;
 //			scaleM(modelMatrix, 0, 1.05f, 1.05f, 1.0f);
 
 
@@ -411,22 +446,6 @@ public class OpenGLRenderer implements Renderer {
 //			currentScale = currentScale - 0.001f;
 
 		}
-
-		float[] MVP = new float[16];
-		multiplyMM(MVP, 0, projectionMatrix, 0, modelMatrix, 0);
-		glUniformMatrix4fv(uMVPMatrixLocation, 1, false, MVP, 0);
-
-		// Env?a la matriz de proyecci?n multiplicada por modelMatrix al shader
-		glUniformMatrix4fv(uMVPMatrixLocation, 1, false, MVP, 0);
-		// Env?a la matriz modelMatrix al shader
-		glUniformMatrix4fv(uMVMatrixLocation, 1, false, modelMatrix, 0);
-		// Actualizamos el color (Marr?n)
-		//glUniform4f(uColorLocation, 0.78f, 0.49f, 0.12f, 1.0f);
-		glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glUniform1f(uTextureUnitLocation, 0);
 
 
 	}

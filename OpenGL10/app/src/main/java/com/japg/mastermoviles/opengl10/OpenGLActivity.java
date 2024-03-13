@@ -145,55 +145,9 @@ public class OpenGLActivity extends AppCompatActivity {
                             openGLRenderer.handleScale2(aumentamosEscala, scaleFactor);
                             lastDistance = distance;
 
-
-						/*
-
-						float distance = calculateDistance(event);
-						// Si es el primer movimiento con dos dedos
-						if (lastDistance == -1) {
-							lastDistance = distance;
-
-						}
-							float scaleFactor = distance / lastDistance;
-
-							if(lastDistance - distance < 1){
-								Log.w("tagg","Aumentamos");
-							}
-
-							if(lastDistance - distance > 1){
-								Log.w("tagg","Disminuimos");
-							}
-//							Log.w("tagg", "current scale [" +scaleFactor+"]");
-//							Log.w("tagg", "distancia [" +distance+"]");
-//							Log.w("tagg", "lastDistance [" +lastDistance+"]");
-
-							// Llama a la función de escalado en el renderizador OpenGL
-							openGLRenderer.handleScale(scaleFactor);
-
-						lastDistance = distance;*/
-
                         }
 
-//        		}else if (event.getAction() == MotionEvent.ACTION_MOVE && event.getPointerCount() == 2){
-//
-//					float distance = calculateDistance(event);
-//					// Si es el primer movimiento con dos dedos
-//					if (lastDistance == -1) {
-//						lastDistance = distance;
-//					} else {
-//						float scaleFactor = distance / lastDistance;
-//						// Llama a la función de escalado en el renderizador OpenGL
-//						openGLRenderer.handleScale(scaleFactor);
 
-//						glSurfaceView.queueEvent(new Runnable() {
-//							@Override
-//							public void run() {
-//								openGLRenderer.handleScale(scaleFactor);
-//							}
-//						});
-//						lastDistance = distance;
-//					}
-                        //return true;
                     } else {
                         lastDistance = -1; // Reinicia la distancia si no hay dos dedos tocando la pantalla
                         return false;
@@ -202,31 +156,6 @@ public class OpenGLActivity extends AppCompatActivity {
                 } else {
                     return false;
                 }
-            }
-
-            //			class ScaleGestureListener extends ScaleGestureDetector.SimpleOnScaleGestureListener{
-//				@Override
-//				public boolean onScale(@NonNull ScaleGestureDetector detector){
-//					float scaleFactor = detector.getScaleFactor();
-//					glSurfaceView.queueEvent(new Runnable() {
-//						@Override
-//						public void run() {
-//							openGLRenderer.handleTouchPinch(scaleFactor);
-//						}
-//					});
-//					return true;
-//				}
-//			}
-            private static final long TIMER_DELAY = 100L;
-
-            private long lastTime = 0;
-
-            private float calculateDistance(MotionEvent event) {
-                float x1 = event.getX(0);
-                float y1 = event.getY(0);
-                float x2 = event.getX(1);
-                float y2 = event.getY(1);
-                return (float) Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
             }
 
         });
@@ -240,16 +169,6 @@ public class OpenGLActivity extends AppCompatActivity {
             glSurfaceView.onPause();
         }
     }
-
-//	@Override
-//	public boolean onTouchEvent(MotionEvent event){
-//		return true;
-//	}
-
-//	@Override
-//	public boolean onScaleEvent(){
-//		return true;
-//	}
 
     @Override
     protected void onResume() {
