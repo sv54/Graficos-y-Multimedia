@@ -1,19 +1,22 @@
-uniform mat4 u_MVPMatrix;   		// in: Matriz Projection*ModelView
-uniform mat4 u_MVMatrix;			// in: Matriz ModelView
+uniform mat4 u_MVPMatrix;
+uniform mat4 u_MVMatrix;
 uniform vec4 u_Color;				// in: color del objeto
 uniform sampler2D u_TextureUnit;	// in: Unidad de Textura
 
-attribute vec4 a_Position;			// in: Posición de cada vértice
-attribute vec3 a_Normal;			// in: Normal de cada vértice
-attribute vec2 a_UV;				// in: Coordenadas UV de mapeado de textura
+attribute vec4 a_Position;
+attribute vec3 a_Normal;
+attribute vec2 a_UV;
+
+varying vec2 v_UV;
+varying vec3 v_Normal;
+varying vec3 v_Position;
 
 varying vec4 v_Color;				// out: Color de salida al fragment shader
 
 
-
 void main()
 {
-	float ambient  = 0.15;									// 15% de intensidad ambiente
+	float ambient  = 0.3;									// 15% de intensidad ambiente
 	vec4  specularColor = vec4(1, 1, 1, 1);					// Color especular (brillos blancos)
 
 	vec3 LightPos0 = vec3( 2,  5, 3);						// Posición de la luz 0 [fija]
@@ -47,5 +50,9 @@ void main()
 	specular = pow(max(dot(V, R), 0.0), 200.0);				// Exponente de Phong (200)
 
 	v_Color += attenuation*(u_Color*texture2D(u_TextureUnit, a_UV)*diffuse + specularColor*specular);
+
+	v_UV = a_UV;
+	v_Normal = normalize(vec3(u_MVMatrix * vec4(a_Normal, 0.0)));
+	v_Position = vec3(u_MVMatrix * a_Position);
 	gl_Position = u_MVPMatrix * a_Position;
 }
