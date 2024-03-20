@@ -12,7 +12,7 @@ varying vec3 v_Normal;
 varying vec3 v_Position;
 
 varying vec4 v_Color;				// out: Color de salida al fragment shader
-
+//varying float atenuacion;
 
 void main()
 {
@@ -31,12 +31,12 @@ void main()
 	vec3  V = normalize(P);	  								// Vector Visión (Eye)
 	vec3  R = normalize(reflect(-L, N));					// Vector reflejado R=2N(N.L)-L
 
-	float attenuation = 1.0/(0.3+(0.1*d)+(0.01*d*d)); 		// Cálculo de la atenuación
+	//attenuation = 1.0/(0.3+(0.1*d)+(0.01*d*d)); 		// Cálculo de la atenuación
 
 	float diffuse  = max(dot(N, L), 0.0);					// Cálculo de la intensidad difusa
 	float specular = pow(max(dot(V, R), 0.0), 200.0);		// Exponente de Phong (200)
 
-	v_Color = u_Color*ambient+attenuation*(u_Color*texture2D(u_TextureUnit, a_UV)*diffuse + specularColor*specular);
+	//v_Color = u_Color*ambient+attenuation*(u_Color*texture2D(u_TextureUnit, a_UV)*diffuse + specularColor*specular);
 
 	// Segunda Luz
 	d = length(P - LightPos1);								// distancia
@@ -44,12 +44,12 @@ void main()
 	V = normalize(P);	  									// Vector Visión (Eye)
 	R = normalize(reflect(-L, N));							// Vector reflejado R=2N(N.L)-L
 
-	attenuation = 1.0/(0.3+(0.1*d)+(0.01*d*d)); 			// Cálculo de la atenuación
+	//attenuation = 1.0/(0.3+(0.1*d)+(0.01*d*d)); 			// Cálculo de la atenuación
 
 	diffuse  = max(dot(N, L), 0.0);							// Cálculo de la intensidad difusa
 	specular = pow(max(dot(V, R), 0.0), 200.0);				// Exponente de Phong (200)
 
-	v_Color += attenuation*(u_Color*texture2D(u_TextureUnit, a_UV)*diffuse + specularColor*specular);
+	//v_Color += attenuation*(u_Color*texture2D(u_TextureUnit, a_UV)*diffuse + specularColor*specular);
 
 	v_UV = a_UV;
 	v_Normal = normalize(vec3(u_MVMatrix * vec4(a_Normal, 0.0)));

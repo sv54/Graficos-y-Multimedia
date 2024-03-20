@@ -9,8 +9,9 @@ uniform vec3 u_LightPos;
 uniform vec4 u_Color;
 
 varying vec4 v_Color;
+varying float atenuacion;
 
-const float shininess = 64.0; // Ajusta el brillo especular aquí
+const float shininess = 64.0;
 
 void main()
 {
@@ -28,7 +29,7 @@ void main()
 
 	vec3 ambient = vec3(1); // Luz ambiental mínima
 
-	vec3 result = (ambient + diffuse) * texColor.rgb + specular;
+	vec3 result = ((ambient + diffuse) * texColor.rgb + specular) ;
 
-	gl_FragColor = vec4(result, texColor.a) * v_Color;
+	gl_FragColor = vec4(result, texColor.a);
 }

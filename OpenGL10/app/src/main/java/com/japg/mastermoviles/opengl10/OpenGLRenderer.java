@@ -255,8 +255,8 @@ public class OpenGLRenderer implements Renderer {
 			Log.w(TAG, "Max. Texture Image Units: "+maxTextureImageUnits[0]);
 		}
 		// Cargamos la textura desde los recursos
-		texture = TextureHelper.loadTexture(context, R.drawable.f1_base_color);
-		textureBlack = TextureHelper.loadTexture(context, R.drawable.ruedas_traseras);
+		texture = TextureHelper.loadTexture(context, R.drawable.f1_base_color_v3);
+		textureBlack = TextureHelper.loadTexture(context, R.drawable.ruedas);
 
 
 		// Leemos los shaders
